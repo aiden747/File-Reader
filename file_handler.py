@@ -1,7 +1,7 @@
 from mistralai import Mistral
 import os
 
-## PDF FILE NAME: Invoice_2251071_from_FIBERLINK_CORP.pdf
+
 
 '''
 This module is to demonstrate and practice basic file handling in python.
