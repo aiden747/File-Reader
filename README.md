@@ -2,10 +2,9 @@
 
 https://docs.mistral.ai/capabilities/document/
 https://mistral.ai/news/mistral-ocr
-API Key: HLZgmBN1xuTeaA3XRNjQza9SjUP6M267 (Expires April 30th)
+API Key: --- (Expires April 30th)
 
-Grazed Foundation (Profile and Proposal).V1 02192025.pdf
-Invoice_2251071_from_FIBERLINK_CORP.pdf
+
 
 
 #### TODO
