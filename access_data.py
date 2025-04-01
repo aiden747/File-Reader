@@ -4,9 +4,6 @@ import os
 # Most of this was generated from co piolot. I am still trying to 
 # understand how to use Mistral API
 
-## API KEY:  HLZgmBN1xuTeaA3XRNjQza9SjUP6M267
-## PDF FILE:  Invoice_2251071_from_FIBERLINK_CORP.pdf
-## PDF FILE 2:  Nanny Contract.docx.pdf
 
 # API KEY and PDF FILE
 file = 'Invoice_2251071_from_FIBERLINK_CORP.pdf'
