@@ -8,7 +8,7 @@ import os
 # API KEY and PDF FILE
 file = 'Invoice_2251071_from_FIBERLINK_CORP.pdf'
 absolute_path = os.path.abspath(file)
-api_key = os.environ.get("MISTRAL_API_KEY", "HLZgmBN1xuTeaA3XRNjQza9SjUP6M267")
+api_key = os.environ.get("MISTRAL_API_KEY", "--")
 
 # If the API key is not set
 if not api_key:
