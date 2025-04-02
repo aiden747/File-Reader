@@ -17,7 +17,6 @@ from pathlib import Path
 from mistralai import DocumentURLChunk, ImageURLChunk, TextChunk
 import json
 from mistralai.models import OCRResponse
-from IPython.display import Markdown, display
 
 
 # Initialize Mistral client with API key
@@ -102,10 +101,5 @@ with open(output_file, 'w', encoding='utf-8') as f:
 
 print(f"Markdown content has been saved to: {output_file}")
 
-# Optionally display Markdown content
-display(Markdown(combined_markdown))
-
-# Display combined markdowns and images
-display(Markdown(get_combined_markdown(pdf_response)))
 
 
