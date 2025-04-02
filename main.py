@@ -1,13 +1,16 @@
-# Initialize Mistral client with API key
-from mistralai import Mistral
-
-api_key = "API_KEY" # Replace with your API key
-client = Mistral(api_key=api_key)
-
 # Import required libraries
+from mistralai import Mistral
 from pathlib import Path
 from mistralai import DocumentURLChunk, ImageURLChunk, TextChunk
 import json
+from mistralai.models import OCRResponse
+from IPython.display import Markdown, display
+
+
+# Initialize Mistral client with API key
+api_key = "API_KEY" # Replace with your API key
+client = Mistral(api_key=api_key)
+
 
 # Verify PDF file exists
 pdf_file = Path("File.pdf")
@@ -37,8 +40,6 @@ response_dict = json.loads(pdf_response.model_dump_json())
 
 print(json.dumps(response_dict, indent=4)[0:1000]) # check the first 1000 characters
 
-from mistralai.models import OCRResponse
-from IPython.display import Markdown, display
 
 def replace_images_in_markdown(markdown_str: str, images_dict: dict) -> str:
     """
@@ -78,6 +79,21 @@ def get_combined_markdown(ocr_response: OCRResponse) -> str:
 
     return "\n\n".join(markdowns)
 
+# Combine OCR text and images into a single Markdown document
+combined_markdown = get_combined_markdown(pdf_response)
+
+# Save the Markdown content to a file
+output_file = 'output.md' # Specify output file name
+with open(output_file, 'w', encoding='utf-8') as f:
+    f.write(combined_markdown)
+
+print(f"Markdown content has been saved to {output_file}")
+
+# Optionally display Markdown content
+display(Markdown(combined_markdown))
+
 # Display combined markdowns and images
 display(Markdown(get_combined_markdown(pdf_response)))
 
+if __name__ == '__main__':
+    print('Running Reader module...\n')
