@@ -5,7 +5,7 @@ from pathlib import Path
 from mistralai import Mistral, TextChunk
 from mistralai import ImageURLChunk
 
-api_key = "HLZgmBN1xuTeaA3XRNjQza9SjUP6M267"
+api_key = "____"
 client = Mistral(api_key=api_key)
 
 # Verify image exists
