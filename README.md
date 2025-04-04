@@ -3,7 +3,7 @@
 
 ## PDF
 
-### `PDF.py`
+### `pdf_.py`
 - Extracts the text and image data from the PDF file using the Mistral OCR API
 - Combines the extracted data into one string in Markdown format and saves it as a Markdown file.
 - Acts as a template module for future code.
