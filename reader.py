@@ -11,24 +11,29 @@ TODO:
   - Structure directory
 """
 
-# Import required libraries
-from mistralai import Mistral
+# Libraries
 from pathlib import Path
-from mistralai import DocumentURLChunk, ImageURLChunk, TextChunk
-import json
+from mistralai import Mistral, DocumentURLChunk
 from mistralai.models import OCRResponse
 
 
-# Initialize Mistral client with API key
-api_key = input("Enter your Mistral API key: ")
+# API key
+api_key = "_____"
+
+# File path
+pdf_file = Path("____")
+
+# Mistral client
 client = Mistral(api_key=api_key)
 
-# Verify PDF file exists
-pdf_file = Path(input("Enter the name of the PDF file: "))
-assert pdf_file.is_file()
 
+# Verifies the file exists
+try:
+    assert pdf_file.is_file()
+except AssertionError:
+    print(f"File [{pdf_file}] does not exist.")
 
-# Upload PDF file to Mistral's OCR service
+# Stores the response after Uploading the PDF file to Mistrals servers
 uploaded_file = client.files.upload(
     file={
         "file_name": pdf_file.stem,
@@ -37,69 +42,59 @@ uploaded_file = client.files.upload(
     purpose="ocr",
 )
 
-# Get URL for the uploaded file
+# Stores a temporary, secure URL that allows access to the uploaded PDF file on Mistrlals servers
 signed_url = client.files.get_signed_url(file_id=uploaded_file.id, expiry=1)
 
-# Process PDF with OCR, including embedded images
+# Stores the results of the OCR process from the uploaded PDF file
 pdf_response = client.ocr.process(
     document=DocumentURLChunk(document_url=signed_url.url),
     model="mistral-ocr-latest",
     include_image_base64=True
 )
 
-# Convert response to JSON format
-response_dict = json.loads(pdf_response.model_dump_json())
-
-# print(json.dumps(response_dict, indent=4)[0:1000]) # check the first 1000 characters
 
 
+# Combines the extracted text and images from the OCR response into a single string in Markdown format
+def get_combined_markdown(ocr_response: OCRResponse) -> str:
+    markdowns: list[str] = []
+
+    # Creates a new empty dictionary for each page in the OCR response
+    for page in ocr_response.pages:
+        image_data = {}
+
+        # Iterates through each image on the page and stores the base64 image data
+        for img in page.images:
+            image_data[img.id] = img.image_base64
+
+        # Appends the result of the function to the markdowns list
+        markdowns.append(replace_images_in_markdown(page.markdown, image_data))
+
+    # Combines all the Markdown strings into a single string
+    return "\n\n".join(markdowns)
+
+
+
+# Replaces the image placeholders in the Markdown string with their corresponding base64-encoded image data
 def replace_images_in_markdown(markdown_str: str, images_dict: dict) -> str:
-    """
-    Replace image placeholders in markdown with base64-encoded images.
-
-    Args:
-        markdown_str: Markdown text containing image placeholders
-        images_dict: Dictionary mapping image IDs to base64 strings
-
-    Returns:
-        Markdown text with images replaced by base64 data
-    """
     for img_name, base64_str in images_dict.items():
         markdown_str = markdown_str.replace(
             f"![{img_name}]({img_name})", f"![{img_name}]({base64_str})"
         )
+
+    # Returns the modified Markdown string
     return markdown_str
 
-def get_combined_markdown(ocr_response: OCRResponse) -> str:
-    """
-    Combine OCR text and images into a single markdown document.
 
-    Args:
-        ocr_response: Response from OCR processing containing text and images
 
-    Returns:
-        Combined markdown string with embedded images
-    """
-    markdowns: list[str] = []
-    # Extract images from page
-    for page in ocr_response.pages:
-        image_data = {}
-        for img in page.images:
-            image_data[img.id] = img.image_base64
-        # Replace image placeholders with actual images
-        markdowns.append(replace_images_in_markdown(page.markdown, image_data))
-
-    return "\n\n".join(markdowns)
-
-# Combine OCR text and images into a single Markdown document
+# Get the combined Markdown content from the OCR response
 combined_markdown = get_combined_markdown(pdf_response)
 
-# Save the Markdown content to a file
+# Create the name of the Markdown file
 output_file = f'{pdf_file.stem}.md'
+
+# Write the combined Markdown content to a file
 with open(output_file, 'w', encoding='utf-8') as f:
     f.write(combined_markdown)
 
+# Print the location of the saved Markdown file
 print(f"Markdown content has been saved to: {output_file}")
-
-
-
