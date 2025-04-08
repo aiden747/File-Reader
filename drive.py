@@ -8,6 +8,12 @@ import io
 SERVICE_ACCOUNT_FILE = r'credentials file path'
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
+# Define the subdirectory where files will be downloaded into
+DOWNLOAD_DIR = r'download dir'
+
+# Make sure directory exists
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
 # Authenticate with the service account
 credentials = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -23,8 +29,11 @@ def list_files_in_folder(folder_id):
     return files
 
 def download_file(file_id, file_name):
+    # Create the full path for the file in the subdirectory
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+
     request = drive_service.files().get_media(fileId=file_id)
-    fh = io.FileIO(file_name, 'wb')
+    fh = io.FileIO(file_path, 'wb')
     downloader = MediaIoBaseDownload(fh, request)
     done = False
     while not done:
