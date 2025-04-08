@@ -16,27 +16,49 @@ create_a_markdown_file() - Not being used (redundant)
 image_string() - Needs more testing
 '''
 
-
 import os
-from mistralai import Mistral, DocumentURLChunk
-from mistralai.models import OCRResponse
-from pathlib import Path
 import shutil
-import base64
-from http import client
+import io
 import json
-from pathlib import Path
-from mistralai import Mistral, ImageURLChunk, TextChunk
-from enum import Enum
-from pathlib import Path
-from pydantic import BaseModel
 import base64
+from pathlib import Path
 from PIL import Image
+from http import client
+from enum import Enum
+from pydantic import BaseModel
+from mistralai import Mistral, ImageURLChunk, TextChunk, DocumentURLChunk
+from mistralai.models import OCRResponse
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from google.oauth2 import service_account
 
 
-# Cant get working
-def get_g_drive():
-    pass
+
+# Downloads the files off G drive
+def g_drive_download():
+    ## Parameters
+    folder_id = '___'
+    download_dir = r'___'
+    ## Parameters
+    service_file = r'____'
+    scope = ['https://www.googleapis.com/auth/drive']
+    os.makedirs(download_dir, exist_ok=True)
+    credentials = service_account.Credentials.from_service_account_file(
+        service_file, scopes=scope)
+    drive_service = build('drive', 'v3', credentials=credentials)
+    query = f"'{folder_id}' in parents and trashed = false"
+    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
+    files = results.get('files', [])
+    for file in files:
+        file_path = os.path.join(download_dir, file['name'])
+        request = drive_service.files().get_media(fileId=file['id'])
+        fh = io.FileIO(file_path, 'wb')
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+            print(f"Downloading: {file['name']}")
+    return download_dir
 
 
 # Finds the path for a directory
