@@ -41,10 +41,6 @@ def get_g_drive():
 
 # Finds the path for a directory
 def find_directory_path(target, start=r"C:\\"):
-    ## Parameters
-    #target = r"DOCUMENTS"
-    #start = "C:\\"
-    ## Parameters
     result = None
     for root, dirs, files in os.walk(start):
         if target in dirs:
@@ -58,10 +54,7 @@ def find_directory_path(target, start=r"C:\\"):
 
 
 # Returns a list of files from a directory
-def get_files_in_directory(directory):
-    ## Parameters
-    # directory = r"C:\Users\aiden\File Reader\DOCUMENTS"
-    ## Parameters
+def get_files_from_directory(directory):
     try:
         items = os.listdir(directory)
         files = [os.path.join(directory, item) for item in items if os.path.isfile(os.path.join(directory, item))]
@@ -77,18 +70,17 @@ def get_file_contents(files):
     for file in files:
         name, extension = os.path.splitext(os.path.basename(file))
         if extension == '.pdf':
-            #print(f'PDF File: {name}')
             # content = read_pdf(file)
-            files_read[file] = "This is the content inside a PDF file"
-        else:
-            #print(f'Skip File: {name}')
-            files_read[file] = "This is the content inside other files"
+            files_read[file] = "This is the content of a PDF file"
+        elif extension == '.png':
+            # content = read_png(file)
+            files_read[file] = "This is the content of a PNG file"
     return files_read
 
     
 # Returns the contents of a PDF file as a string
 def read_pdf(file):
-    api_key = "____"
+    api_key = "___"
     client = Mistral(api_key=api_key)
     pdf_file = Path(file)
     uploaded_file = client.files.upload(
@@ -125,33 +117,27 @@ def read_pdf(file):
     return combined_markdown
 
 
-# Returns a string with png contents
+# Returns the contents of a PNG file as a string
 def read_png(file):
-    api_key = "____"
+    api_key = "___"
     client = Mistral(api_key=api_key)
 
     class StructuredOCR(BaseModel):
-        file_name: str  # can be any string
-        topics: list[str]  # must be a list of strings
-        languages: str  # string
-        ocr_contents: dict  # any dictionary, can be freely defined by the model
-
+        file_name: str
+        topics: list[str]
+        languages: str
+        ocr_contents: dict
+    
     def structured_ocr(image_path: str) -> StructuredOCR:
         image_file = Path(image_path)
         assert image_file.is_file(), "The provided image path does not exist."
-
-        # Read and encode the image file
         encoded_image = base64.b64encode(image_file.read_bytes()).decode()
         base64_data_url = f"data:image/jpeg;base64,{encoded_image}"
-
-        # Process the image using OCR
         image_response = client.ocr.process(
             document=ImageURLChunk(image_url=base64_data_url),
             model="mistral-ocr-latest"
         )
         image_ocr_markdown = image_response.pages[0].markdown
-
-        # Parse the OCR result into a structured JSON response
         chat_response = client.chat.parse(
             model="pixtral-12b-latest",
             messages=[
@@ -171,47 +157,31 @@ def read_png(file):
             response_format=StructuredOCR,
             temperature=0
         )
-
         return chat_response.choices[0].message.parsed
 
-    image_path = os.path.basename(file) # Path to sample receipt image
-    structured_response = structured_ocr(Path(image_path)) # Process image and extract data
+    def get_png_markdown(image):
+        string = []
+        for key, value in image.items():
+            if type(value) == list:
+                string.append(f'\n{key}:')
+                for i in value:
+                    string.append(f'- {i}')
+            elif type(value) == dict:
+                string.append(f'\n{key}:')
+                for k, v in value.items():
+                    string.append(f'- {k} : {v}')
+            else:
+                string.append(f'\n{key} : {value}')
+        return "\n".join(string)
 
-    # Parse and return JSON response
+    image_path = os.path.basename(file)
+    structured_response = structured_ocr(Path(image_path))
     response_dict = json.loads(structured_response.model_dump_json())
-    string = image_string(response_dict)
+    string = get_png_markdown(response_dict)
     return string
 
 
-# Creates a markdown file
-def create_a_markdown_file(): ## MIGHT DELETE
-    ## Parameters
-    string = '# INVOICE \n\nFIBERLINK CORP\n304 Indian Trace \\#110\nWeston, FL 33326\n\n## Bill to\n\n2Midtown1210\nTyler Schultz\n3470 E Coast Ave\nApt. 1012\nMiami, FL 33137\n\n## Ship to\n\n2Midtown1210\nTyler Schultz\n3470 E Coast Ave\nApt. 1012\nMiami, FL 33137\n\n## Invoice details\n\nInvoice no.: 2251071\nTerms: Due on receipt\nInvoice date: 03/20/2025\nDue date: 03/20/2025\n\n|  | Date | Product or service | Description | Qty | Rate | Amount |\n| :--: | :--: | :--: | :--: | :--: | :--: | :--: |\n|  |  | INTERNET/Monthly | Monthly Internet Service | 1 | \\$60.00 | \\$60.00 |\n| Ways to pay |  |  |  |  |  |  |\n|  |  |  |  |  |  |  |\n\nNote to customer\nMail check to:\nFIBERLINK CORP\n304 Indian Trace \\#110\nWeston, FL 33326\n\nView and pay'
-    file_path = r'C:\\Users\\aiden\\File Reader\\DOCUMENTS\\Invoice_2251071_from_FIBERLINK_CORP.pdf'
-    # Parameters
-    file = os.path.basename(file_path)
-    name, extension = os.path.splitext(file)
-    output_file = f'{name}.md'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(string)
-    print(f"Markdown content has been saved to: {output_file}")
-    return output_file
-
-
-# Returns the path and content of each markdown file created
-def create_markdown_files(files_read):
-    markdown_files = {}
-    for path, string in files_read.items():
-        name, extension = os.path.splitext(os.path.basename(path))
-        output_file = f'{name}.md'
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(string)
-        output_path = move_markdown_file(output_file)
-        markdown_files[output_path] = string
-    return markdown_files   
-
-
-# Moves the markdown files to a new directory and returns the files path
+# Moves the Markdown files into a new directory, returns the new file path
 def move_markdown_file(source):
     new_dir = os.path.abspath(source)
     try:
@@ -224,12 +194,21 @@ def move_markdown_file(source):
     return new_path
 
 
-# Returns a list of files that have the keyword in the file contents
+# Returns the path and content of each Markdown file created
+def create_markdown_files(files_read):
+    markdown_files = {}
+    for path, string in files_read.items():
+        name, extension = os.path.splitext(os.path.basename(path))
+        output_file = f'{name}.md'
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(string)
+        output_path = move_markdown_file(output_file)
+        markdown_files[output_path] = string
+    return markdown_files   
+
+
+# Returns a list of files that match the keyword
 def keyword_search(file_contents, keyword):
-    ## Parameters
-    #file_contents = ""
-    #keyword = ""
-    ## Parameters
     matches_found = {}
     for path, string in file_contents.items():
         if keyword in string:
@@ -237,7 +216,7 @@ def keyword_search(file_contents, keyword):
     return matches_found    
 
     
-# Prints the items in a array neatly
+# Prints the items in an array neatly
 def format_print(files):
     for file in files:
         if type(files) == list:
@@ -250,23 +229,6 @@ def format_print(files):
         else:
             print()
             break
-
-
-# Converts dict from read_png() to a single string
-def image_string(image):
-    string = []
-    for key, value in image.items():
-        if type(value) == list:
-            string.append(f'\n{key}:')
-            for i in value:
-                string.append(f'- {i}')
-        elif type(value) == dict:
-            string.append(f'\n{key}:')
-            for k, v in value.items():
-                string.append(f'- {k} : {v}')
-        else:
-            string.append(f'\n{key} : {value}')
-    return "\n".join(string)
 
 
 # C:\Users\aiden\File Reader\DOCUMENTS
@@ -305,7 +267,29 @@ if __name__ == "__main__":
     '''
 
     '''
-    
+    image = {
+        "file_name": "parking_receipt",
+        "topics": [
+            "Parking",
+            "Receipt",
+            "City of Palo Alto"
+        ],
+        "languages": "English",
+        "ocr_contents": {
+            "header": "PLACE FACE UP ON DASH CITY OF PALO ALTO NOT VALID FOR ONSTREET PARKING",
+            "expiration_date_time": "11:59 PM AUG 19, 2024",
+            "purchase_date_time": "01:34pm Aug 19, 2024",
+            "total_due": "$15.00",
+            "rate": "Daily Parking",
+            "total_paid": "$15.00",
+            "payment_type": "CC (Swipe)",
+            "ticket_number": "00005883",
+            "serial_number": "520117260957",
+            "setting": "Permit Machines",
+            "machine_name": "Civic Center",
+            "additional_info": "#^^^^-1224, Visa DISPLAY FACE UP ON DASH PERMIT EXPIRES AT MIDNIGHT"
+        }
+    }
     
     test = image_string(image)
     print(test)
