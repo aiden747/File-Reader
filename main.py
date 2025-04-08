@@ -88,7 +88,7 @@ def get_file_contents(files):
     
 # Returns the contents of a PDF file as a string
 def read_pdf(file):
-    api_key = "HLZgmBN1xuTeaA3XRNjQza9SjUP6M267"
+    api_key = "____"
     client = Mistral(api_key=api_key)
     pdf_file = Path(file)
     uploaded_file = client.files.upload(
@@ -127,7 +127,7 @@ def read_pdf(file):
 
 # Returns a string with png contents
 def read_png(file):
-    api_key = "HLZgmBN1xuTeaA3XRNjQza9SjUP6M267"
+    api_key = "____"
     client = Mistral(api_key=api_key)
 
     class StructuredOCR(BaseModel):
@@ -305,29 +305,7 @@ if __name__ == "__main__":
     '''
 
     '''
-    image = {
-        "file_name": "parking_receipt",
-        "topics": [
-            "Parking",
-            "Receipt",
-            "City of Palo Alto"
-        ],
-        "languages": "English",
-        "ocr_contents": {
-            "header": "PLACE FACE UP ON DASH CITY OF PALO ALTO NOT VALID FOR ONSTREET PARKING",
-            "expiration_date_time": "11:59 PM AUG 19, 2024",
-            "purchase_date_time": "01:34pm Aug 19, 2024",
-            "total_due": "$15.00",
-            "rate": "Daily Parking",
-            "total_paid": "$15.00",
-            "payment_type": "CC (Swipe)",
-            "ticket_number": "00005883",
-            "serial_number": "520117260957",
-            "setting": "Permit Machines",
-            "machine_name": "Civic Center",
-            "additional_info": "#^^^^-1224, Visa DISPLAY FACE UP ON DASH PERMIT EXPIRES AT MIDNIGHT"
-        }
-    }
+    
     
     test = image_string(image)
     print(test)
