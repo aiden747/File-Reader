@@ -15,32 +15,43 @@ read_png() - Needs more testing
 create_a_markdown_file() - Not being used (redundant)
 image_string() - Needs more testing
 '''
-
 import os
-import shutil
 import io
 import json
+import shutil
 import base64
-from pathlib import Path
 from PIL import Image
-from http import client
 from enum import Enum
+from http import client
 from pydantic import BaseModel
-from mistralai import Mistral, ImageURLChunk, TextChunk, DocumentURLChunk
+from pathlib import Path
+from mistralai import Mistral, ImageURLChunk, TextChunk,  DocumentURLChunk
 from mistralai.models import OCRResponse
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from google.oauth2 import service_account
+
+# GLOBAL VARIABLES
+MISTRAL_API_KEY = 'mistral_api_key'
+G_DRIVE_LINK = 'google_drive_link'
+SERVICE_FILE = r'google_credentials_json_file_path'
+DOWNLOAD_DIRECTORY = r'file_download_directory'
+MARKDOWN_DIRECTORY = r"markdown_file_directory"
 
 
 
-# Downloads the files off G drive
-def g_drive_download():
-    ## Parameters
-    folder_id = '___'
-    download_dir = r'___'
-    ## Parameters
-    service_file = r'____'
+# Gets the folder id from the folder link
+def get_folder_id(link):
+    print(link)
+    result = link.split(r'folders/')[1].split('?')[0]
+    return result
+
+
+# Downloads the files from a G drive
+def download_gdrive_files():
+    folder_id = get_folder_id(G_DRIVE_LINK)
+    download_dir = DOWNLOAD_DIRECTORY
+    service_file = SERVICE_FILE
     scope = ['https://www.googleapis.com/auth/drive']
     os.makedirs(download_dir, exist_ok=True)
     credentials = service_account.Credentials.from_service_account_file(
@@ -57,26 +68,12 @@ def g_drive_download():
         done = False
         while not done:
             status, done = downloader.next_chunk()
-            print(f"Downloading: {file['name']}")
+            # print(f"Downloading: {file['name']}")
     return download_dir
-
-
-# Finds the path for a directory
-def find_directory_path(target, start=r"C:\\"):
-    result = None
-    for root, dirs, files in os.walk(start):
-        if target in dirs:
-            result = os.path.join(root, target)
-    if result:
-        print(f"Directory found: {result}\n")
-        return result
-    else:
-        print(f"Directory not found.\n")
-        return []
-
+    
 
 # Returns a list of files from a directory
-def get_files_from_directory(directory):
+def load_directory_files(directory):
     try:
         items = os.listdir(directory)
         files = [os.path.join(directory, item) for item in items if os.path.isfile(os.path.join(directory, item))]
@@ -86,23 +83,14 @@ def get_files_from_directory(directory):
         return []
 
 
-# Returns a dictionary holding the files path and the files content
-def get_file_contents(files):
-    files_read = {}
-    for file in files:
-        name, extension = os.path.splitext(os.path.basename(file))
-        if extension == '.pdf':
-            # content = read_pdf(file)
-            files_read[file] = "This is the content of a PDF file"
-        elif extension == '.png':
-            # content = read_png(file)
-            files_read[file] = "This is the content of a PNG file"
-    return files_read
+# Creates a description for the given image
+def describe_image(base64_str):
+        return "Image Description Here"
 
-    
-# Returns the contents of a PDF file as a string
+
+# Returns PDF file contents as a string
 def read_pdf(file):
-    api_key = "___"
+    api_key = MISTRAL_API_KEY
     client = Mistral(api_key=api_key)
     pdf_file = Path(file)
     uploaded_file = client.files.upload(
@@ -130,8 +118,9 @@ def read_pdf(file):
     
     def replace_images_in_markdown(markdown_str: str, images_dict: dict) -> str:    
         for img_name, base64_str in images_dict.items():
+            img_desc = describe_image(base64_str)
             markdown_str = markdown_str.replace(
-                f"![{img_name}]({img_name})", f"![{img_name}]({base64_str})"
+                f"![{img_name}]({img_name})", f"![{img_name}]({base64_str})\n[{img_desc}]\n"
             )
         return markdown_str
 
@@ -139,9 +128,9 @@ def read_pdf(file):
     return combined_markdown
 
 
-# Returns the contents of a PNG file as a string
+# Returns PNG file contents as a string
 def read_png(file):
-    api_key = "___"
+    api_key = MISTRAL_API_KEY
     client = Mistral(api_key=api_key)
 
     class StructuredOCR(BaseModel):
@@ -203,30 +192,36 @@ def read_png(file):
     return string
 
 
-# Moves the Markdown files into a new directory, returns the new file path
-def move_markdown_file(source):
-    new_dir = os.path.abspath(source)
-    try:
-        os.makedirs("Markdown Files", exist_ok=True)
-    except:
-        print('ERROR')
-    new_dir = os.path.abspath("Markdown Files")
-    shutil.move(source, new_dir)
-    new_path = os.path.abspath(source)
-    return new_path
+# Returns a dictionary holding the files path and the files content
+def extract_file_data(files):
+    files_read = {}
+    for file in files:
+        name, extension = os.path.splitext(os.path.basename(file))
+        if extension == '.pdf':
+            content = 'This is the content of a PDF file.'
+            #content = read_pdf(file)
+            files_read[file] = content
+            
+        elif extension == '.png':
+            content = 'This is the content of a PNG file.'
+            # content = read_png(file)
+            files_read[file] = content
+    return files_read
 
 
 # Returns the path and content of each Markdown file created
-def create_markdown_files(files_read):
-    markdown_files = {}
-    for path, string in files_read.items():
-        name, extension = os.path.splitext(os.path.basename(path))
-        output_file = f'{name}.md'
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(string)
-        output_path = move_markdown_file(output_file)
-        markdown_files[output_path] = string
-    return markdown_files   
+def generate_markdown_files(file_data):
+    md_data = {}
+    md_dir = MARKDOWN_DIRECTORY
+    os.makedirs(md_dir, exist_ok=True)
+    for path, string in file_data.items():
+        name, type = os.path.splitext(os.path.basename(path))
+        md_name = f'{name}.md'
+        md_path = os.path.join(md_dir, md_name)
+        with open(md_path, "w", encoding="utf-8") as file:
+            file.write(string)
+        md_data[md_path] = string
+    return md_data
 
 
 # Returns a list of files that match the keyword
@@ -238,7 +233,7 @@ def keyword_search(file_contents, keyword):
     return matches_found    
 
     
-# Prints the items in an array neatly
+# Prints the array neatly
 def format_print(files):
     for file in files:
         if type(files) == list:
@@ -251,73 +246,33 @@ def format_print(files):
         else:
             print()
             break
+    
 
+# Order of wich to call functions
+def main():
+    print('Welcome!\n')
 
-# C:\Users\aiden\File Reader\DOCUMENTS
-# C:\Users\aiden\SMURF ACCOUNT\SCRIPTS\TEST DUMMY
+    print('...Downloading G-Drive Files...')
+    gdrive_dir = download_gdrive_files()
+    print('...G-Drive Files Downloaded...\n')
 
-# C:\\Users\\aiden\\File Reader\\DOCUMENTS\\Invoice_2251071_from_FIBERLINK_CORP.pdf
-#  # INVOICE \n\nFIBERLINK CORP\n304 Indian Trace \\#110\nWeston, FL 33326\n\n## Bill to\n\n2Midtown1210\nTyler Schultz\n3470 E Coast Ave\nApt. 1012\nMiami, FL 33137\n\n## Ship to\n\n2Midtown1210\nTyler Schultz\n3470 E Coast Ave\nApt. 1012\nMiami, FL 33137\n\n## Invoice details\n\nInvoice no.: 2251071\nTerms: Due on receipt\nInvoice date: 03/20/2025\nDue date: 03/20/2025\n\n|  | Date | Product or service | Description | Qty | Rate | Amount |\n| :--: | :--: | :--: | :--: | :--: | :--: | :--: |\n|  |  | INTERNET/Monthly | Monthly Internet Service | 1 | \\$60.00 | \\$60.00 |\n| Ways to pay |  |  |  |  |  |  |\n|  |  |  |  |  |  |  |\n\nNote to customer\nMail check to:\nFIBERLINK CORP\n304 Indian Trace \\#110\nWeston, FL 33326\n\nView and pay
+    print('...Loading Directory Files...')
+    file_list = load_directory_files(gdrive_dir)
+    print('...Directory Files Loaded...\n')
+
+    print('...Extracting File Data...')
+    file_data = extract_file_data(file_list)
+    print('...File Data Extracted...\n')
+
+    print('...Generating Markdown Files...')
+    markdown_files = generate_markdown_files(file_data)
+    print('...Markdown Files Generated...\n')
+
 
 
 if __name__ == "__main__":
-    print('\nStart main.py...\n')
+    main()
 
-    '''
-    # find_directory_path()
-    files = get_files_in_directory()
-    
-    # read_files()
-    for f in files:
-        print(f)
-    print()
-
-    contents = get_file_contents(files)
-
-    for i in contents:
-        print(i)
-        print()
-    
-    create_markdown()
-    files = get_files_in_directory()
-    #format_print(files)
-    files_read = get_file_contents(files)
-    matches = keyword_search(files_read, 'S')
-    print()
-    markdown_files = create_markdown_files(files_read)
-    format_print(markdown_files)
-    '''
-
-    '''
-    image = {
-        "file_name": "parking_receipt",
-        "topics": [
-            "Parking",
-            "Receipt",
-            "City of Palo Alto"
-        ],
-        "languages": "English",
-        "ocr_contents": {
-            "header": "PLACE FACE UP ON DASH CITY OF PALO ALTO NOT VALID FOR ONSTREET PARKING",
-            "expiration_date_time": "11:59 PM AUG 19, 2024",
-            "purchase_date_time": "01:34pm Aug 19, 2024",
-            "total_due": "$15.00",
-            "rate": "Daily Parking",
-            "total_paid": "$15.00",
-            "payment_type": "CC (Swipe)",
-            "ticket_number": "00005883",
-            "serial_number": "520117260957",
-            "setting": "Permit Machines",
-            "machine_name": "Civic Center",
-            "additional_info": "#^^^^-1224, Visa DISPLAY FACE UP ON DASH PERMIT EXPIRES AT MIDNIGHT"
-        }
-    }
-    
-    test = image_string(image)
-    print(test)
-    
-
-    #print(file_contents)    
     '''
 
     print('\n...DONE\n')
