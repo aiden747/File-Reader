@@ -2,7 +2,7 @@ import os
 from mistralai import Mistral
 
 # Retrieve the API key from environment variables
-api_key = "HLZgmBN1xuTeaA3XRNjQza9SjUP6M267"
+api_key = "__"
 
 # Specify model
 model = "mistral-small-latest"
