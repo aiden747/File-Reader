@@ -1,75 +1,108 @@
-# File Reader
-#### Using Mistral OCR API
-<br>
+# Project File Reader
 
-## PDF
+### Project Description
+This project is designed to read files from Google Drive, process them using OCR (Optical Character Recognition), and generate Markdown files for further use.
 
-### `pdf_extractor.py`
-- The **main** file to extract data from a PDF file.
-- Extracts the text and image data from the PDF file using the **Mistral OCR API**.
-- Combines the extracted data into a single string then saves that string into a Markdown file.
-- Intended to be the **template module** for PDF extraction.
-- Is fully **self-contained**.
+---
 
-  
-### `pdf_reference.py`
-- Contains code from the **OCR documentation**.
-- Primarily used for refernece and understanding how the code actually works.
-- A little clunkier and slower than the **`pdf_extractor.py`**.
-- Essentially completes the same task as **`pdf_extractor.py`**.
+## Libraries
+### Required Libraries
+Below are the libraries used in this project, along with their installation commands and descriptions:
 
+1. **Google API Client**
+   ```bash
+   pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+   ```
+   - Used to interact with Google Drive for file uploads and downloads.
 
-###  `pdf_notebook.ipynb`
-- Formats the **`pdf_extractor.py`** into smaller cells.
-- Accomplishing tasks like data analysis, debugging, and prototyping is made easier.
-- Cells provide the ability to run code in small chuncks, get immediate feedback, easier visualization, and Error isolation
+2. **OpenAI**
+   ```bash
+   pip install openai
+   ```
+   - Used for integrating OpenAI's GPT models for text processing.
 
+3. **MistralAI**
+   ```bash
+   pip install mistralai
+   ```
+   - Used for OCR and document processing.
 
-### `pdf_notebook_reference.ipynb` (WIP)
-- Formats the **`pdf_reference.py`** into smaller cells.
-- Accomplishing tasks like data analysis, debugging, and prototyping is made easier.
-- Cells provide the ability to run code in small chuncks, get immediate feedback, easier visualization, and Error isolation
+---
 
-<br><br><br>
+## Environment Variables
+The following environment variables are required for the project to function correctly:
 
-## PNG
+1. **`api_key`**
+   - Purpose: API key for MistralAI to authenticate requests.
 
-### `png_extractor.py` (WIP)
-- The **main** file used to extract data from a PNG file.
-- Extracts the text data from a PNG file using **Mistral OCR API**.
-- Outputs the extracted data as a dictionary.
-- Intended to be the **template module** for PNG extraction.
-- Fully **self-contained script**.
-- WIP
+2. **`gdrive_link`**
+   - Purpose: Link to the Google Drive folder containing the files to process.
 
+3. **`folder_id`**
+   - Purpose: The unique ID of the Google Drive folder.
 
-### `png_reference_1.py` (WIP)
-- Contains the first part of code from the **OCR documentation**.
-- Extracts PNG data and outputs it.
-- WIP
+4. **`service_file`**
+   - Purpose: Path to the Google Service Account JSON file for authentication.
 
+5. **`download_dir`**
+   - Purpose: Directory where files downloaded from Google Drive will be stored.
 
-### `png_reference_2.py` (WIP)
-- Contains the second part of code from the **OCR documentation**.
-- Extracts PNG data and outputs it.
-- WIP
+6. **`markdown_dir`**
+   - Purpose: Directory where the generated Markdown files will be saved.
 
+7. **`open_api`**
+   - Purpose: API key for OpenAI to authenticate requests.
 
-### `png_notebook.ipynb` (WIP)
-- Formats the code from **`png_extractor.py`** into cells.
-- Accomplishing tasks like data analysis, debugging, and prototyping is made easier.
-- Cells provide the ability to run code in small chuncks, get immediate feedback, easier visualization, and Error isolation.
+---
 
+## Functions
+Below is a list of the key functions in the project and their descriptions:
 
-### `png_notebook_reference_1.ipynb` (WIP)
-- Formats the code from **`png_reference_1.py`** into cells.
-- Accomplishing tasks like data analysis, debugging, and prototyping is made easier.
-- Cells provide the ability to run code in small chuncks, get immediate feedback, easier visualization, and Error isolation.
+1. **`var_dict()`**
+   - Description: Creates a dictionary of global variables and their values.
 
+2. **`update_variables(var_dict)`**
+   - Description: Updates the global variables with new values provided by the user.
 
-### `png_notebook_reference_2.ipynb` (WIP)
-- Formats the code from **`png_reference_2.py`** into cells.
-- Accomplishing tasks like data analysis, debugging, and prototyping is made easier.
-- Cells provide the ability to run code in small chuncks, get immediate feedback, easier visualization, and Error isolation.
+3. **`enter_variables(var)`**
+   - Description: Prompts the user to enter or update variable values.
 
+4. **`current_variables()`**
+   - Description: Displays the current values of all variables.
 
+5. **`user_interface()`**
+   - Description: Provides a user-friendly interface to view and update variables.
+
+6. **`client.files.upload()`**
+   - Description: Uploads a local file to MistralAI for OCR processing.
+
+7. **`client.files.get_signed_url()`**
+   - Description: Retrieves a signed URL for accessing the uploaded file.
+
+8. **`client.chat.complete()`**
+   - Description: Sends a chat request to MistralAI or OpenAI and retrieves the response.
+
+---
+
+## Installation
+### Google API
+```bash
+pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+```
+
+### OpenAI
+```bash
+pip install openai
+```
+
+### MistralAI
+```bash
+pip install mistralai
+```
+
+---
+
+## Usage
+1. Set up the required environment variables in your system or a `.env` file.
+2. Run the script to process files from Google Drive and generate Markdown outputs.
+3. Use the user interface to update or view the current configuration.
