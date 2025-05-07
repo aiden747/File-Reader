@@ -196,7 +196,7 @@ def read_png(file):
         return "\n".join(string)
 
     image_path = os.path.basename(file)
-    structured_response = structured_ocr(Path(image_path))
+    structured_response = structured_ocr(Path(file))
     response_dict = json.loads(structured_response.model_dump_json())
     string = get_png_markdown(response_dict)
     return string
@@ -209,7 +209,7 @@ def extract_file_data(files):
         name, extension = os.path.splitext(os.path.basename(file))
         if extension == '.pdf':
             content = 'This is the content of a PDF file.'
-            #content = read_pdf(file)
+            # content = read_pdf(file)
             files_read[file] = content
             
         elif extension == '.png':
@@ -263,29 +263,30 @@ def format_print(files):
 # Order of wich to call functions
 def main():
     print('\nHello!\n')
-    user = input('Pleaser enter your google drive link:\n')
-    global G_Drive
-    G_Drive = user
+    # user = input('Pleaser enter your google drive link:\n')
+    # global G_Drive
+    # G_Drive = user
 
     print('\n...Downloading Files...')
-    #gdrive_dir = download_gdrive_files()
+    gdrive_dir = download_gdrive_files()
 
     print('\n...Processing Files...')
-    #file_list = load_directory_files(gdrive_dir)
+    file_list = load_directory_files(gdrive_dir)
 
-    #file_data = extract_file_data(file_list)
+    file_data = extract_file_data(file_list)
 
     print('\n...Generating Files...')
-    #markdown_files = generate_markdown_files(file_data)
+    markdown_files = generate_markdown_files(file_data)
 
 
 if __name__ == "__main__":
-    print('\nEND')
+    main()
 
 
 
 
 # TODO
+# Debug read_png()
 # Take in variables
 # Create global variables
 # Open AI image reader
